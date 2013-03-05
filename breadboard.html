@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+    <title>Breadboard - Due VGA library</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  </head>
+  <body>
+    <div id="header">
+      <nav>
+        <li class="fork"><a href="https://github.com/stimmer/DueVGA">View On
+            GitHub</a></li>
+        <li class="downloads"><a href="https://github.com/stimmer/DueVGA/zipball/master">ZIP</a></li>
+        <li class="downloads"><a href="https://github.com/stimmer/DueVGA/tarball/master">TAR</a></li>
+        <li class="title">DOWNLOADS</li>
+      </nav>
+    </div>
+    <!-- end header -->
+    <div class="wrapper">
+      <section>
+        <div id="title">
+          <h1>DueVGA</h1>
+          <p>Arduino Due VGA library</p>
+        </div>
+        <div>
+          <h3>Building the circuit on a breadboard</h3>
+          <p>Monochrome modes require just 3 resistors. Colour needs 10
+            resistors. Values are as follows:</p>
+          <p></p>
+          <table style="width: 100%;" border="0" cellpadding="0" cellspacing="0">
+            <tbody>
+              <tr>
+                <td><br>
+                </td>
+                <td>Resistor</td>
+                <td>Quantity</td>
+              </tr>
+              <tr>
+                <td>Both modes</td>
+                <td>82<span class="st">&#937;</span></td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td>Monochrome</td>
+                <td>100<span class="st">&#937;</span></td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="5">Colour</td>
+                <td>2.2k<span class="st">&#937;</span></td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td>1k<span class="st">&#937;</span></td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td>820<span class="st">&#937;</span></td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td>470<span class="st">&#937;</span></td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td>390<span class="st">&#937;</span></td>
+                <td>1</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>(If you have 2k<span class="st">&#937; or 510</span><span class="st">&#937;
+              resistors you may use these instead of 2.2k</span><span class="st">&#937;
+              and 470</span><span class="st">&#937; for more accurate colour) <br>
+            </span></p>
+          <p><span class="st">This picture shows how to wire everything up:<br>
+            </span></p>
+          <img style="max-width: none;" alt="Due VGA library breadboard circuit"
+            src="images/vgacolour.png"><br>
+          The MOSI pin is the bottom-centre pin of the 6-pin SPI connector just
+          below the SAM3X chip - this and the 100 ohm resistor is only needed
+          for monochrome modes. Similarly the connections to pins 34-41 and
+          corresponding resistors are only needed for colour modes. <br>
+          <br>
+          The above picture has the VGA socket wired for colour modes. For
+          monochrome modes, connect the VGA RGB wires to the 100 ohm resistor as
+          below:<br>
+          <br>
+          <img style="max-width: none;" alt="Due VGA library monochrome breadboard curcuit"
+            src="images/vgamono.jpg"><br>
+          <p><br>
+          </p>
+          <h3><span class="st">VGA socket wiring<br>
+            </span></h3>
+          <img alt="Due VGA socket wiring" src="images/vgacon.png">
+          <p><br>
+          </p>
+        </div>
+        <div id="title2">
+          <hr> <span class="credits left">Project maintained by <a href="https://github.com/stimmer">stimmer</a></span>
+          <span class="credits right">Hosted on GitHub Pages &#8212; Theme by <a href="http://twitter.com/#%21/michigangraham">mattgraham</a></span>
+          <br>
+        </div>
+      </section>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    <center><br>
+    </center>
+  </body>
+</html>
