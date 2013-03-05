@@ -1,4 +1,9 @@
-@font-face {
+<html>
+  <head>
+    <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+  </head>
+  <body>
+    <pre>@font-face {
   font-family: 'OpenSansLight';
   src: url("../fonts/OpenSans-Light-webfont.eot");
   src: url("../fonts/OpenSans-Light-webfont.eot?#iefix") format("embedded-opentype"), url("../fonts/OpenSans-Light-webfont.woff") format("woff"), url("../fonts/OpenSans-Light-webfont.ttf") format("truetype"), url("../fonts/OpenSans-Light-webfont.svg#OpenSansLight") format("svg");
@@ -73,7 +78,7 @@
    HTML5 display definitions
    ========================================================================== */
 /*
- * Corrects block display not defined in IE6/7/8/9 & FF3
+ * Corrects block display not defined in IE6/7/8/9 &amp; FF3
  */
 article,
 aside,
@@ -90,7 +95,7 @@ summary {
 }
 
 /*
- * Corrects inline-block display not defined in IE6/7/8/9 & FF3
+ * Corrects inline-block display not defined in IE6/7/8/9 &amp; FF3
  */
 audio,
 canvas,
@@ -813,10 +818,10 @@ section #title .credits {
   color: #696969;
   margin-top: -10px;
 }
-section #title .credits.left {
+section #title2 .credits.left {
   float: left;
 }
-section #title .credits.right {
+section #title2 .credits.right {
   float: right;
 }
 
@@ -849,3 +854,6 @@ section #title .credits.right {
     display: none;
   }
 }
+</pre>
+  </body>
+</html>
