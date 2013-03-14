@@ -1,11 +1,14 @@
 // Arduino Due VGA Library by stimmer
-// v0.222 (22/2/2013)
-//
-// Initial public release
+// v0.314 (14/3/2013)
 //
 // 
+// Changed timer to timer 0 channel 1 (REG_TC0_xx1 / TC1_Handler)
+//	PWM pin 2 now works correctly
+// Colour mode now uses DMA for output
+//      400%+ speed increase ;-)
+// Added keywords.txt
+// 
 // Known bugs:
-// Timer interferes with PWM2
 // Sync timing code is all wrong
 // Lines occasionally off by half a pixel
 // Drawing functions could be faster
@@ -102,7 +105,6 @@ public:
   // various display parameters
   int mode,line,linedouble,synced,framecount; 
   int xclocks,xstart,xsyncwidth,xscale,yscale,lfreq,ffreq,ltot,debug;
-  uint8_t *lptr;
   
   int lfreqmin,lfreqmax,ffreqmin,ffreqmax;
   void setMonitorFreqRange(int hmin, int hmax, int vmin, int vmax){

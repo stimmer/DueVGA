@@ -2,13 +2,10 @@
 
 Vga VGA;
 
-__attribute__ ((section(".text"))) 
-const uint16_t colourfunc[3072] __attribute__((aligned(256))) = {0x4770};
-
-void __attribute__((aligned(256))) TC0_Handler()
+void __attribute__((aligned(256))) TC1_Handler()
 {
   static int disp=0;
-    long dummy=REG_TC0_SR0; 
+    long dummy=REG_TC0_SR1; 
 
     int c=REG_PWM_CCNT2;
     if(!VGA.synced)
@@ -20,28 +17,13 @@ void __attribute__((aligned(256))) TC0_Handler()
     if(disp==VGA_MONO){
       REG_DMAC_CTRLA4=0x12030000 + (VGA.pw>>1);  
       REG_DMAC_CHER=1<<4;
-      asm volatile(".rept 14\n\t nop\n\t .endr\n\t");
+      asm volatile(".rept 8\n\t nop\n\t .endr\n\t");
       REG_PIOA_PDR=1<<26; 
     }    
     
-    if(disp==VGA_COLOUR){
-        asm volatile (
-	"movw r1,#0x1238 \n\t"
-        "movt r1,#0x400e \n\t"
-        "mov r3,%[bytes] \n\t"
-
-	"orr %[fp],#1 \n\t"
-	"push {lr} \n\t"
-	"blx %[fp] \n\t"
-        "mov r0,#0 \n\t"
-        "str r0,[r1] \n\t"
-	"mov %[bytes],r3 \n\t"
-	"pop {lr} \n\t"
-	:[bytes]"+r"(VGA.lptr)	
-        :[fp]"r"(colourfunc)
-        :"r0","r1","r2","r3"
-        );  
-      
+    if(disp==VGA_COLOUR){  
+      REG_DMAC_CTRLA5=0x22060000 + (VGA.cw >> 2); 
+      REG_DMAC_CHER=1<<5;   
     }
     
     if(VGA.line==VGA.ysyncstart) _v_digitalWriteDirect(_v_vsync, VGA.vsyncpol); 
@@ -51,7 +33,7 @@ void __attribute__((aligned(256))) TC0_Handler()
     if(VGA.line == VGA.ysize)disp=0;
     if(VGA.line == VGA.ytotal){
       if(VGA.mode == VGA_MONO)REG_DMAC_SADDR4=(uint32_t)VGA.pb;
-      else VGA.lptr=VGA.cb;
+      else REG_DMAC_SADDR5=(uint32_t)VGA.cb;
       VGA.line=0;disp=VGA.mode;VGA.framecount++;
     }
 }
@@ -61,9 +43,9 @@ void PWM_Handler()
     long t=(REG_PWM_ISR1);
     if(VGA.linedouble){
       if(VGA.mode == VGA_MONO)REG_DMAC_SADDR4-=(VGA.pw<<1);
-      else if(VGA.mode == VGA_COLOUR)VGA.lptr-=VGA.cw;
+      else REG_DMAC_SADDR5-=(VGA.cw);
     }
-    VGA.debug=REG_TC0_CV0;
+    //VGA.debug=REG_TC0_CV1;
     asm volatile("wfe \n\t");
 }
 
@@ -71,16 +53,6 @@ void __attribute__((aligned(64))) DMAC_Handler()
 {
     REG_PIOA_PER  = 1<<26;     
     uint32_t dummy=REG_DMAC_EBCISR;
-}
-
-__attribute__ ((section(".ramfunc"))) 
-uint32_t _v_efc_perform_fcr(Efc *p_efc, uint32_t ul_fcr) {
-    volatile uint32_t ul_status;
-    p_efc->EEFC_FCR = ul_fcr;
-    do {
-        ul_status = p_efc->EEFC_FSR;
-    } while ((ul_status & EEFC_FSR_FRDY) != EEFC_FSR_FRDY);
-    return (ul_status & (EEFC_FSR_FLOCKE | EEFC_FSR_FCMDE));
 }
 
 int Vga::calcmodeline()
@@ -151,18 +123,18 @@ void Vga::startinterrupts()
 {
   for(int i=0;i<45;i++)    NVIC_SetPriority(IRQn_Type (i),3);  
   NVIC_SetPriority(PWM_IRQn,3);
-  NVIC_SetPriority(TC0_IRQn,1); 
+  NVIC_SetPriority(TC1_IRQn,1); 
   NVIC_SetPriority(UOTGHS_IRQn,2); 
   
   if(mode==VGA_MONO) NVIC_EnableIRQ(DMAC_IRQn);
-  NVIC_EnableIRQ(TC0_IRQn); 
+  NVIC_EnableIRQ(TC1_IRQn); 
   NVIC_EnableIRQ(PWM_IRQn); 
 }
 
 void Vga::stopinterrupts()
 {
   NVIC_DisableIRQ(PWM_IRQn);
-  NVIC_DisableIRQ(TC0_IRQn);
+  NVIC_DisableIRQ(TC1_IRQn);
   NVIC_DisableIRQ(DMAC_IRQn); 
 }
 
@@ -181,21 +153,21 @@ void Vga::starttimers()
   REG_PWM_IER1=1<<2;
   REG_PWM_ENA= 1<<2;  
 
-  REG_PMC_PCER0= 1<<27;
+  REG_PMC_PCER0= 1<<28;
   REG_TC0_WPMR=0x54494D00;
-  REG_TC0_CMR0=0b00000000000010011100010000000000;
-  REG_TC0_RC0=xclocks/2; 
-  REG_TC0_RA0=0;  
-  REG_TC0_CCR0=0b101;    
-  REG_TC0_IER0=0b00010000; 
-  REG_TC0_IDR0=0b11101111; 
+  REG_TC0_CMR1=0b00000000000010011100010000000000;
+  REG_TC0_RC1=xclocks/2; 
+  REG_TC0_RA1=0;  
+  REG_TC0_CCR1=0b101;    
+  REG_TC0_IER1=0b00010000; 
+  REG_TC0_IDR1=0b11101111; 
 }
 
 void Vga::stoptimers()
 {
-    REG_TC0_CCR0=0b10;    
-    REG_TC0_IDR0=0b00010000; 
-    REG_PMC_PCDR0= 1<<27;
+    REG_TC0_CCR1=0b10;    
+    REG_TC0_IDR1=0b00010000; 
+    REG_PMC_PCDR0= 1<<28;
 
     REG_PWM_DIS= 1<<2;
     REG_PWM_IDR1=1<<2;
@@ -210,6 +182,7 @@ void Vga::startmono(){
     REG_DMAC_EN=1;
     REG_DMAC_GCFG=0x00;
     REG_DMAC_EBCIER=1<<4;
+    REG_DMAC_SADDR4=(uint32_t)VGA.pb;
     REG_DMAC_DADDR4=(uint32_t)&REG_SPI0_TDR;  
     REG_DMAC_DSCR4=0;
     REG_DMAC_CTRLB4=0x20310000;
@@ -235,52 +208,32 @@ void Vga::stopmono(){
 }
 void Vga::startcolour(){    
     
-  // compile line output function
-    uint16_t buf[3072]={0};
-    uint16_t *bufp = buf;
-    for(int i=0;i<xsize;i++){
-      *bufp++=0xf813;
-      *bufp++=0x0b01;        // ldrb.w  r0, [r3], #1
-      *bufp++=0x0080;        // lsls    r0, r0, #2
-      *bufp++=0x6008;        // str     r0, [r1, #0]
-      for(int j=7;j<xscale;j++)
-	*bufp++=0xbf00;      // nop
-    }
-    *bufp++=0x4770;
-    
-    uint32_t *a=(uint32_t *)buf;
-    uint32_t *b = const_cast<uint32_t *> ((uint32_t *)colourfunc);
-    
-    // check if line output function has already been flashed
-    int needsflash=0;
-    for(int i=0;i<1536;i++)if(a[i]!=b[i])needsflash=1;
-
-    if(needsflash)for(int i=0;i<24;i++){
-      unsigned long FlashSectorNum = ((unsigned long)b - 0x80000) / 256; 
-      Efc * efc = FlashSectorNum >= 1024 ? EFC1 : EFC0;
-      FlashSectorNum &= 1023; 
-      unsigned long flash_cmd = 0;
-      unsigned long flash_status = 0;  
-      flash_cmd = (0x5A << 24) | (FlashSectorNum << 8) | 0x03;
-
-      noInterrupts();
-      for(int j=0;j<64;j++)*b++ = *a++;      
-      flash_status = _v_efc_perform_fcr (efc, flash_cmd);   
-      interrupts();
-      delay(1);
-    }
-    asm volatile ("isb \n\t");
-         
-    for(int i=34;i<=41;i++)pinMode(i,OUTPUT);
-    REG_PIOC_OWER= 0x3fc;
-    REG_PIOC_OER= 0x3fc;
+  REG_PMC_PCER1= 1<<7;  
+  REG_DMAC_WPMR=DMAC_WPMR_WPKEY(0x444d4143);
+  REG_DMAC_EN=1;
+  REG_DMAC_GCFG=0x00;
+  REG_DMAC_SADDR5=(uint32_t)VGA.cb;
+  REG_DMAC_DADDR5=(uint32_t)0x60000000;
+  REG_DMAC_DSCR5=0;
+  REG_DMAC_CTRLB5=0x20000000;
+  REG_DMAC_CFG5=  0x10712200;
+  
+  REG_PMC_PCER0= 1<<9; 
+  REG_PIOC_PDR=0b1111111100;
+  REG_PIOC_ABSR&=~0b1111111100;  
+  REG_SMC_WPCR=0x534d4300;
+  REG_SMC_SETUP0=0x00000000;
+  REG_SMC_PULSE0=0X00000101;
+  REG_SMC_CYCLE0=xscale;
+  REG_SMC_TIMINGS0=0;
+  REG_SMC_MODE0=0x00000000;
+        
 }
 
 void Vga::stopcolour()
 {
-    for(int i=34;i<=41;i++)pinMode(i,INPUT);
-    REG_PIOC_OWDR= 0x3fc;
-    REG_PIOC_ODR= 0x3fc;
+  REG_PMC_PCDR0= 1<<9; 
+
 }
 
 int Vga::begin(int x, int y, int m)
@@ -299,6 +252,17 @@ int Vga::begin(int x, int y, int m)
   int r;
   r=calcmodeline(); if(r)return r;
   r=allocvideomem(); if(r)return r;
+  
+  // this code puts DMA priority above CPU.
+  MATRIX->MATRIX_WPMR=0x4d415400;
+  for(int i=0;i<6;i++)MATRIX->MATRIX_MCFG[i]=1;
+  MATRIX->MATRIX_MCFG[4]=4;
+  for(int i=0;i<8;i++)MATRIX->MATRIX_SCFG[i]=0x01000008;
+  MATRIX->MATRIX_SCFG[6]=0x011200ff;
+  MATRIX->MATRIX_PRAS0=MATRIX->MATRIX_PRAS1=MATRIX->MATRIX_PRAS2=0x00000000;
+  MATRIX->MATRIX_PRAS3=MATRIX->MATRIX_PRAS4=MATRIX->MATRIX_PRAS5=0x00000000;
+  MATRIX->MATRIX_PRAS6=0x00030000;
+  MATRIX->MATRIX_PRAS7=MATRIX->MATRIX_PRAS8=0x00000000;
   
   pinMode(_v_hsync,OUTPUT); 
   pinMode(_v_vsync,OUTPUT); 

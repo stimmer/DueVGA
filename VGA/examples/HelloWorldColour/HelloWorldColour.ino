@@ -17,4 +17,6 @@ void loop() {
   
   // print message
   VGA.print(" Hello Arduino ");
+  
+  VGA.waitSync();
 }

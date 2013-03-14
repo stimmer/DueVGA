@@ -81,10 +81,7 @@ int  VGA.begin(int x, int y, int m=VGA_MONO);
   Returns: 0 on success, negative on failure
   Not all resolutions work on all monitors. Highest recommended resolutions are 
   800x600 in mono and 320x240 in colour. 
-  
-  For technical reasons please do not call this function too frequently in a sketch
-  especially in colour mode (definitely not more than once every few seconds).
-  
+    
   
 void VGA.end();
   
@@ -265,12 +262,9 @@ line - when the interrupt fires the DMA is out of data but the blanking words ar
 still being output, so the interrupt routine quickly sets the pin back to PIO mode, 
 putting it low, and avoiding the white line.
 
-The colour mode uses an unrolled loop to output each line, so the processor is doing 
-all the work and therefore it is slower. However the way the loop is generated is 
-technically interesting. The exact timings needed for the loop aren't known until 
-runtime, after the VGA.begin(...VGA_COLOUR) call. So the line function actually gets
-compiled at runtime. However it is too slow to run as a ram function, so it also has
-to be burned into flash which is faster. So the Arduino ends up compiling and
-flashing its own function at runtime :-)
+The colour mode uses DMA to the SMC - static memory controller - to output 8 bits
+of data at a time to pins 34-41. No end-of-line interrupt is needed here because
+the output goes high impedance when data is not being written. The pixel width
+is controlled by changing the memory timing registers in the SMC.
 
 Have fun!
