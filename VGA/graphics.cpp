@@ -11,7 +11,7 @@ void Vga::drawPixel(int x, int y, int c)
       if(c>=0)  pbb[y*pbw+(x^15)]=c;
       else pbb[y*pbw+(x^15)]^=c;
     }
-    else if(mode==VGA_COLOUR){
+    else if(mode&VGA_COLOUR){
       if(c>=0)  cb[y*cw+x]=c;
       else cb[y*cw+x]^= -c;      
     }
@@ -199,7 +199,7 @@ void Vga::fillEllipse(int x0, int y0, int x1, int y1, int col)
 
 
 void Vga::scroll(int x, int y, int w, int h, int dx, int dy,int col){
-  if(mode==VGA_COLOUR){
+  if(mode&VGA_COLOUR){
     if(dy<=0){
       if(dx<=0){      
 	for(int i=x;i<x+w+dx;i++)for(int j=y;j<y+h+dy;j++)

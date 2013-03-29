@@ -1,5 +1,5 @@
 #include "VGA.h"
-
+#include "crntsc.h"
 Vga VGA;
 
 void __attribute__((aligned(256))) TC1_Handler()
@@ -13,7 +13,7 @@ void __attribute__((aligned(256))) TC1_Handler()
 	REG_PWM_CPRDUPD2=VGA.xclocks;
 	VGA.synced=1;
       }
-                   
+    
     if(disp==VGA_MONO){
       REG_DMAC_CTRLA4=0x12030000 + (VGA.pw>>1);  
       REG_DMAC_CHER=1<<4;
@@ -25,16 +25,92 @@ void __attribute__((aligned(256))) TC1_Handler()
       REG_DMAC_CTRLA5=0x22060000 + (VGA.cw >> 2); 
       REG_DMAC_CHER=1<<5;   
     }
+                      
     
-    if(VGA.line==VGA.ysyncstart) _v_digitalWriteDirect(_v_vsync, VGA.vsyncpol); 
-    if(VGA.line==VGA.ysyncend) _v_digitalWriteDirect(_v_vsync,!VGA.vsyncpol); 
-    VGA.linedouble++; 
-    if(VGA.linedouble == VGA.yscale){VGA.linedouble=0;VGA.line++;}
-    if(VGA.line == VGA.ysize)disp=0;
-    if(VGA.line == VGA.ytotal){
-      if(VGA.mode == VGA_MONO)REG_DMAC_SADDR4=(uint32_t)VGA.pb;
-      else REG_DMAC_SADDR5=(uint32_t)VGA.cb;
-      VGA.line=0;disp=VGA.mode;VGA.framecount++;
+    if(VGA.mode==VGA_NTSC){
+      int p;
+      static uint16_t *buf;
+
+      REG_DMAC_SADDR5=(int)buf;
+      REG_DMAC_CTRLA5=0x22060000 + 221;
+      REG_DMAC_CHER=1<<5;   
+      buf=(uint16_t *)(((int)VGA.dmabuf)+((VGA.line&1)*1024));
+      
+      asm volatile(
+	".rept 18 \n\t"
+	" ldrh r0,[%[cbt]], #2 \n\t"
+	" strh r0,[%[dbo]], #2 \n\t"
+	".endr \n\t"
+	:
+	:[dbo]"r"(buf+41)
+        ,[cbt]"r"(&VGA.cbt[VGA.phase + 41])
+	:"r0"
+      );
+
+      if(VGA.line < VGA.ysize){
+	p=VGA.phase + 88;if(p>=88)p-=88;
+	asm volatile(
+        " mov r0,#45056                    \n\t"
+        " mov r1,#512                      \n\t"
+        
+        "1:                                \n\t"
+
+        ".rept 8                           \n\t"
+        " ldrb r2, [%[cbl]], #1           \n\t"
+        " ldrh r3, [%[crt], r2, lsl #1]   \n\t"
+        " strh r3, [%[dbo]], #2           \n\t" 
+        " adds %[crt],r1                    \n\t"
+        ".endr                             \n\t"
+        
+        " cmp %[crt],%[cre]                \n\t"
+        " it gt                            \n\t"
+        " subgt %[crt],r0                  \n\t"       
+        
+        " cmp %[cbl],%[cbe]                \n\t"
+        " bne 1b                           \n\t"
+        
+        :
+        :[dbo]"r"(buf+88)
+        ,[cbl]"r"(VGA.cb+VGA.line*320)
+        ,[cbe]"r"(VGA.cb+VGA.line*320+320)
+        ,[crt]"r"(VGA.crt+p*256)
+        ,[cre]"r"(VGA.crt+88*256-1)
+        :"r0","r1","r2","r3"
+        );      	
+	
+      }
+      else if ((VGA.line == VGA.ysize)||(VGA.line == VGA.ysize+1))
+      {
+	uint32_t *lp = (uint32_t *)(buf+88);
+        for(int i=0;i<160;i++)*lp++=0x3c3c3c3c;
+      }
+      else if ((VGA.line == VGA.ysyncstart)||(VGA.line == VGA.ysyncstart+1))
+      {
+        uint32_t *lp = (uint32_t *)buf;
+        for(int i=0;i<16;i++)*lp++=0x3c3c3c3c;
+        for(int i=16;i<222;i++)*lp++=0;                
+      }
+      else if ((VGA.line == VGA.ysyncend)||(VGA.line == VGA.ysyncend+1))
+      {
+        uint32_t *lp = (uint32_t *)buf;
+        for(int i=0;i<16;i++)*lp++=0;
+        for(int i=16;i<222;i++)*lp++=0x3c3c3c3c;   		
+      }
+      VGA.phase+=VGA.poff;if(VGA.phase >= 88)VGA.phase -= 88;
+      VGA.line++;if(VGA.line == VGA.ytotal)VGA.line=0;
+    }
+
+    else{
+      if(VGA.line==VGA.ysyncstart) _v_digitalWriteDirect(_v_vsync, VGA.vsyncpol); 
+      if(VGA.line==VGA.ysyncend) _v_digitalWriteDirect(_v_vsync,!VGA.vsyncpol); 
+      VGA.linedouble++; 
+      if(VGA.linedouble == VGA.yscale){VGA.linedouble=0;VGA.line++;}
+      if(VGA.line == VGA.ysize)disp=0;
+      if(VGA.line == VGA.ytotal){
+	if(VGA.mode == VGA_MONO)REG_DMAC_SADDR4=(uint32_t)VGA.pb;
+	else if(VGA.mode == VGA_COLOUR)REG_DMAC_SADDR5=(uint32_t)VGA.cb;
+	VGA.line=0;disp=VGA.mode;VGA.framecount++;
+      }
     }
 }
 
@@ -104,7 +180,7 @@ int Vga::allocvideomem()
     pbb=(uint32_t *)((int(pb-0x20000000)*32)+0x22000000);
     pbw=pw*16;
   }
-  if(mode==VGA_COLOUR){
+  if((mode == VGA_COLOUR) || (mode == VGA_NTSC)){
     cw=xsize;
     cbsize=cw*ysize;
     cb=(uint8_t *)calloc(cbsize,1);
@@ -236,6 +312,20 @@ void Vga::stopcolour()
 
 }
 
+void Vga::dmapri()
+{
+    // this code puts DMA priority above CPU.
+  MATRIX->MATRIX_WPMR=0x4d415400;
+  for(int i=0;i<6;i++)MATRIX->MATRIX_MCFG[i]=1;
+  MATRIX->MATRIX_MCFG[4]=4;
+  for(int i=0;i<8;i++)MATRIX->MATRIX_SCFG[i]=0x01000008;
+  MATRIX->MATRIX_SCFG[6]=0x011200ff;
+  MATRIX->MATRIX_PRAS0=MATRIX->MATRIX_PRAS1=MATRIX->MATRIX_PRAS2=0x00000000;
+  MATRIX->MATRIX_PRAS3=MATRIX->MATRIX_PRAS4=MATRIX->MATRIX_PRAS5=0x00000000;
+  MATRIX->MATRIX_PRAS6=0x00030000;
+  MATRIX->MATRIX_PRAS7=MATRIX->MATRIX_PRAS8=0x00000000;
+}
+
 int Vga::begin(int x, int y, int m)
 {
   if(up)VGA.end();
@@ -247,22 +337,13 @@ int Vga::begin(int x, int y, int m)
   xsize=x;ysize=y;mode=m;
   tww=tw=xsize/8;twh=th=ysize/8;twx=twy=tx=ty=0;
   ink=255;paper=0;
-  synced=0;framecount=0;
+  synced=0;framecount=0;line=linedouble=0;
     
   int r;
   r=calcmodeline(); if(r)return r;
   r=allocvideomem(); if(r)return r;
   
-  // this code puts DMA priority above CPU.
-  MATRIX->MATRIX_WPMR=0x4d415400;
-  for(int i=0;i<6;i++)MATRIX->MATRIX_MCFG[i]=1;
-  MATRIX->MATRIX_MCFG[4]=4;
-  for(int i=0;i<8;i++)MATRIX->MATRIX_SCFG[i]=0x01000008;
-  MATRIX->MATRIX_SCFG[6]=0x011200ff;
-  MATRIX->MATRIX_PRAS0=MATRIX->MATRIX_PRAS1=MATRIX->MATRIX_PRAS2=0x00000000;
-  MATRIX->MATRIX_PRAS3=MATRIX->MATRIX_PRAS4=MATRIX->MATRIX_PRAS5=0x00000000;
-  MATRIX->MATRIX_PRAS6=0x00030000;
-  MATRIX->MATRIX_PRAS7=MATRIX->MATRIX_PRAS8=0x00000000;
+  dmapri();
   
   pinMode(_v_hsync,OUTPUT); 
   pinMode(_v_vsync,OUTPUT); 
@@ -274,6 +355,56 @@ int Vga::begin(int x, int y, int m)
   
   up=1;
   return 0;
+}
+
+int Vga::beginNTSC()
+{
+  mode=VGA_NTSC;
+  xsize=320;ysize=200;tww=40;twh=25;twx=twy=tx=ty=0;
+  ink=255;paper=0;
+  synced=0;framecount=0;
+  xscale=12;yscale=1;
+  xtotal=444; xsyncstart=335; xsyncend=368;
+  ytotal=262; ysyncstart=230; ysyncend=236;
+  lfreq=15778; pclock=7000000; ltot=262;
+  xclocks=5328; xstart=130;
+  xsyncwidth=394;
+  line=linedouble=0;
+  phase=0;poff=8;
+  
+  int r;
+  dmabuf=(uint16_t *)malloc(4096);
+  crt=(const uint16_t *)crtab;cbt=cbtab;
+  r=allocvideomem(); if(r)return r;  
+  pinMode(_v_hsync,OUTPUT); 
+  pinMode(_v_vsync,OUTPUT); 
+  starttimers();
+  dmapri();
+  
+  REG_PMC_PCER1= 1<<7;  
+  REG_DMAC_WPMR=DMAC_WPMR_WPKEY(0x444d4143);
+  REG_DMAC_EN=1;
+  REG_DMAC_GCFG=0x00;
+  REG_DMAC_SADDR5=(uint32_t)dmabuf;
+  REG_DMAC_DADDR5=(uint32_t)0x60000000;
+  REG_DMAC_DSCR5=0;
+  REG_DMAC_CTRLB5=0x20000000;
+  REG_DMAC_CFG5=  0x10702200;
+  
+  REG_PMC_PCER0= 1<<9; 
+  REG_PIOC_PDR=0b1111111100;
+  REG_PIOC_ABSR&=~0b1111111100;  
+  REG_SMC_WPCR=0x534d4300;
+  REG_SMC_SETUP0=0x00000000;
+  REG_SMC_PULSE0=0X00000101;
+  REG_SMC_CYCLE0=6;
+  REG_SMC_TIMINGS0=0;
+  REG_SMC_MODE0=0x00000000;
+  
+  startinterrupts();
+  up=1;
+  return 0;
+
 }
 
 void Vga::end()

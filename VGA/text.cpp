@@ -62,7 +62,7 @@ void Vga::scrollPrintWindow()
       for(int i=0;i<8;i++)
 	memset((uint8_t *)(a+pw*(ysize-8+i)),(ink&1)?0:255,2*(pw-2));
     }
-    else if (mode==VGA_COLOUR){
+    else if (mode&VGA_COLOUR){
       uint8_t *a=cb,*b=cb+8*cw;
       memmove(a,b,cw*(ysize-8));
       memset(a+cw*(ysize-8),paper,cw*8);
@@ -87,7 +87,7 @@ size_t Vga::write(uint8_t c){
       a+=pw*2;
     }
   }
-  else if(mode==VGA_COLOUR){
+  else if(mode&VGA_COLOUR){
     uint8_t *a=(uint8_t *)cb+(twy+ty)*8*cw+(twx+tx)*8;  
     for(int j=0;j<8;j++){
       for(int i=0;i<8;i++){
