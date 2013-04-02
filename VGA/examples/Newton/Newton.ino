@@ -1,6 +1,4 @@
 // Newton fractal
-// ... at least it was supposed to be a Newton fractal - it doesn't look right at all!
-// I must have made a mistake in the mathematics somewhere. But I like it :-)
 
 #include <VGA.h>
 #include <complex>
@@ -19,7 +17,7 @@ void loop(){
   for(int i=0;i<320;i++){
     for(int j=0;j<240;j++){     
       complex<float> c(0,0),z((i-160.0)/80.0,(j-120.0)/60.0),zz,zzz;
-      complex<float> one(1.0,0.0),two(2.0,0.0),three(2.0,0.0);
+      complex<float> one(1.0,0.0),two(2.0,0.0),three(3.0,0.0);
       int n;
       for(n=1;n<sizeof(cmap);n++){        
         zz=z*z; zzz=zz*z;
