@@ -1,5 +1,5 @@
 #include "VGA.h"
-#include "crntsc.h"
+#include "crpal.h"
 Vga VGA;
 
 void __attribute__((aligned(256))) TC1_Handler()
@@ -27,15 +27,15 @@ void __attribute__((aligned(256))) TC1_Handler()
     }
                       
     
-    if(VGA.mode==VGA_NTSC){
+    if(VGA.mode==VGA_PAL){
       int p;
       static uint16_t *buf;
 
       REG_DMAC_SADDR5=(int)buf;
-      REG_DMAC_CTRLA5=0x22060000 + 221;
+      REG_DMAC_CTRLA5=0x22060000 + 223;
       REG_DMAC_CHER=1<<5;   
       buf=(uint16_t *)(((int)VGA.dmabuf)+((VGA.line&1)*1024));
-      
+      int oe=VGA.line&1;
       asm volatile(
 	".rept 18 \n\t"
 	" ldrh r0,[%[cbt]], #2 \n\t"
@@ -43,14 +43,14 @@ void __attribute__((aligned(256))) TC1_Handler()
 	".endr \n\t"
 	:
 	:[dbo]"r"(buf+41)
-        ,[cbt]"r"(&VGA.cbt[VGA.phase + 41])
+        ,[cbt]"r"(&VGA.cbt[oe][VGA.phase + 11])
 	:"r0"
       );
 
       if(VGA.line < VGA.ysize){
-	p=VGA.phase + 88;if(p>=88)p-=88;
+	p=VGA.phase + 6;if(p>=30)p-=30;
 	asm volatile(
-        " mov r0,#45056                    \n\t"
+        " mov r0,#15360                    \n\t"
         " mov r1,#512                      \n\t"
         
         "1:                                \n\t"
@@ -70,33 +70,33 @@ void __attribute__((aligned(256))) TC1_Handler()
         " bne 1b                           \n\t"
         
         :
-        :[dbo]"r"(buf+88)
+        :[dbo]"r"(buf+96)
         ,[cbl]"r"(VGA.cb+VGA.line*320)
         ,[cbe]"r"(VGA.cb+VGA.line*320+320)
-        ,[crt]"r"(VGA.crt+p*256)
-        ,[cre]"r"(VGA.crt+88*256-1)
+        ,[crt]"r"(VGA.crt[oe]+p*256)
+        ,[cre]"r"(VGA.crt[oe]+30*256-1)
         :"r0","r1","r2","r3"
         );      	
 	
       }
       else if ((VGA.line == VGA.ysize)||(VGA.line == VGA.ysize+1))
       {
-	uint32_t *lp = (uint32_t *)(buf+88);
+	uint32_t *lp = (uint32_t *)(buf+96);
         for(int i=0;i<160;i++)*lp++=0x3c3c3c3c;
       }
       else if ((VGA.line == VGA.ysyncstart)||(VGA.line == VGA.ysyncstart+1))
       {
         uint32_t *lp = (uint32_t *)buf;
         for(int i=0;i<16;i++)*lp++=0x3c3c3c3c;
-        for(int i=16;i<222;i++)*lp++=0;                
+        for(int i=16;i<223;i++)*lp++=0;                
       }
       else if ((VGA.line == VGA.ysyncend)||(VGA.line == VGA.ysyncend+1))
       {
         uint32_t *lp = (uint32_t *)buf;
         for(int i=0;i<16;i++)*lp++=0;
-        for(int i=16;i<222;i++)*lp++=0x3c3c3c3c;   		
+        for(int i=16;i<223;i++)*lp++=0x3c3c3c3c;   		
       }
-      VGA.phase+=VGA.poff;if(VGA.phase >= 88)VGA.phase -= 88;
+      VGA.phase+=VGA.poff;if(VGA.phase >= 30)VGA.phase -= 30;
       VGA.line++;if(VGA.line == VGA.ytotal)VGA.line=0;
     }
 
@@ -180,7 +180,7 @@ int Vga::allocvideomem()
     pbb=(uint32_t *)((int(pb-0x20000000)*32)+0x22000000);
     pbw=pw*16;
   }
-  if((mode == VGA_COLOUR) || (mode == VGA_NTSC)){
+  if((mode & VGA_COLOUR)){
     cw=xsize;
     cbsize=cw*ysize;
     cb=(uint8_t *)calloc(cbsize,1);
@@ -357,24 +357,26 @@ int Vga::begin(int x, int y, int m)
   return 0;
 }
 
-int Vga::beginNTSC()
+int Vga::beginPAL()
 {
-  mode=VGA_NTSC;
-  xsize=320;ysize=200;tww=40;twh=25;twx=twy=tx=ty=0;
+  mode=VGA_PAL;
+  xsize=320;ysize=240;tww=40;twh=30;twx=twy=tx=ty=0;
   ink=255;paper=0;
   synced=0;framecount=0;
   xscale=12;yscale=1;
-  xtotal=444; xsyncstart=335; xsyncend=368;
-  ytotal=262; ysyncstart=230; ysyncend=236;
-  lfreq=15778; pclock=7000000; ltot=262;
-  xclocks=5328; xstart=130;
+  xtotal=448; xsyncstart=335; xsyncend=368;
+  ytotal=312; ysyncstart=270; ysyncend=272;
+  lfreq=15625; pclock=7000000; ltot=262;
+  xclocks=5376; xstart=130;
   xsyncwidth=394;
   line=linedouble=0;
-  phase=0;poff=8;
+  phase=0;poff=28;
   
   int r;
   dmabuf=(uint16_t *)malloc(4096);
-  crt=(const uint16_t *)crtab;cbt=cbtab;
+  crt[0]=(const uint16_t *)cretab;
+  crt[1]=(const uint16_t *)crotab;
+  cbt[0]=cbetab;cbt[1]=cbotab;
   r=allocvideomem(); if(r)return r;  
   pinMode(_v_hsync,OUTPUT); 
   pinMode(_v_vsync,OUTPUT); 

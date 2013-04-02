@@ -57,13 +57,13 @@ inline void _v_digitalWriteDirect(int pin, boolean val){
 #define VGA_MONO 1
 #define VGA_COLOUR 2
 #define VGA_COLOR VGA_COLOUR 
-#define VGA_NTSC 18
+#define VGA_PAL 34
 
 class Vga : public Print {
     
 public:
   int  begin(int x, int y, int m=VGA_MONO);
-  int  beginNTSC();
+  int  beginPAL();
   void end();
   
   void clear();
@@ -104,9 +104,9 @@ public:
   int ysize,ysyncstart,ysyncend,ytotal;
   bool vsyncpol, hsyncpol;
   
-  //NTSC
-  const uint16_t *cbt;
-  const uint16_t *crt;
+  //PAL
+  const uint16_t *cbt[2];
+  const uint16_t *crt[2];
   uint16_t *dmabuf;
   int phase,poff;
   
