@@ -8,8 +8,12 @@ V0.222 - 22/2/2013
 
 Place the VGA folder in your libraries directory
 Start or restart the Arduino IDE
-Load File->Examples->VGA->HelloWorld
-Upload to Due
+
+
+For VGA mono:
+-------------
+Upload File->Examples->VGA->HelloWorld
+
 Connect pin 42 to VGA VSync (pin 14 on VGA D-connector)
 Connect pin 43 to VGA HSync (pin 13 on VGA D-connector)
 Connect GND to VGA GND (pins 5,6,7,8,10 on VGA D-connector)
@@ -21,8 +25,9 @@ If the monitor has trouble, try some small resistors between 42 and VSync, and 4
 and HSync (10 to 100 ohm)
 
 
-For colour:
-Upload HelloWorldColour
+For VGA colour:
+---------------
+Upload File->Examples->VGA->HelloWorldColour
 Connect Due to monitor as follows:
 
 Due pin 34 -> 820R resistor -> VGA pin 3 (blue)
@@ -40,6 +45,24 @@ Due pin 42 -> VGA pin 14 (VSync)
 Due pin 43 -> VGA pin 13 (HSync)
 
 Due pin GND -> VGA pins 5,6,7,8,10
+
+
+For NTSC/PAL:
+-------------
+Upload File->Examples->VGA->DrawingTestNTSC (or DrawingTestPAL)
+Connect Due to TV as follows:
+
+Due pin 36 -> 3k3  resistor -> Video In
+Due pin 37 -> 1k6  resistor -> Video In
+Due pin 38 -> 820R resistor -> Video In
+Due pin 39 -> 390R resistor -> Video In
+Due pin 40 -> 200R resistor -> Video In
+Due pin 41 -> 100R resistor -> Video In
+
+Due pin GND -> Video GND
+
+On some TVs this will not work. You may need a 100uF capacitor between
+the resistors and Video In. 
 
 2) Basic usage
 ==============
@@ -63,7 +86,9 @@ Serial.println(...)
 
 In mono mode, 1 is white, 0 is black, and -1 inverts the pixel.
 
-In colour mode, colours are interpreted in binary as RRRGGGBB. So for example
+In colour mode (and PAL and NTSC modes), colours are interpreted in 
+binary as RRRGGGBB. So for example:
+
 0b11111111 = 255 = white    0b11110000 = 240 = orange
 0b11100000 = 224 = red      0b10010010 = 146 = grey
 0b00011100 = 28 = green	    0b10000011 = 227 = purple
@@ -82,6 +107,18 @@ int  VGA.begin(int x, int y, int m=VGA_MONO);
   Not all resolutions work on all monitors. Highest recommended resolutions are 
   800x600 in mono and 320x240 in colour. 
     
+
+int  VGA.beginNTSC();
+
+  Initializes the display in NTSC mode, 320x200 pixels.
+  Returns: 0 on success, negative on failure
+
+  
+int  VGA.beginPAL();
+
+  Initializes the display in PAL mode, 320x240 pixels.
+  Returns: 0 on success, negative on failure
+
   
 void VGA.end();
   
@@ -266,5 +303,10 @@ The colour mode uses DMA to the SMC - static memory controller - to output 8 bit
 of data at a time to pins 34-41. No end-of-line interrupt is needed here because
 the output goes high impedance when data is not being written. The pixel width
 is controlled by changing the memory timing registers in the SMC.
+
+The NTSC and PAL modes use a pair of DMA buffers. One is outputting the signal for
+the line whilst the interrupt routine is filling the other buffer for the next line.
+The colour burst and chroma phase tables have been precalculated (which is why these
+modes use so much flash).
 
 Have fun!
