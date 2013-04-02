@@ -4,7 +4,7 @@
 
 Vga VGA;
 
-void __attribute__((aligned(256))) TC1_Handler()
+void __attribute__((aligned(64))) TC1_Handler()
 {
   static int disp=0;
     long dummy=REG_TC0_SR1; 
@@ -15,18 +15,18 @@ void __attribute__((aligned(256))) TC1_Handler()
 	REG_PWM_CPRDUPD2=VGA.xclocks;
 	VGA.synced=1;
       }
-    
-    if(disp==VGA_MONO){
-      REG_DMAC_CTRLA4=0x12030000 + (VGA.pw>>1);  
-      REG_DMAC_CHER=1<<4;
-      asm volatile(".rept 8\n\t nop\n\t .endr\n\t");
-      REG_PIOA_PDR=1<<26; 
-    }    
-    
     if(disp==VGA_COLOUR){  
       REG_DMAC_CTRLA5=0x22060000 + (VGA.cw >> 2); 
       REG_DMAC_CHER=1<<5;   
-    }
+    }    
+    if(disp==VGA_MONO){
+      REG_DMAC_CTRLA4=0x12030000 + (VGA.pw>>1);  
+      REG_DMAC_CHER=1<<4;
+      asm volatile(".rept 10\n\t nop\n\t .endr\n\t");
+      REG_PIOA_PDR=1<<26; 
+    }    
+    
+
                       
     
     if(VGA.mode==VGA_PAL){
@@ -109,6 +109,7 @@ void __attribute__((aligned(256))) TC1_Handler()
       }
       VGA.phase+=VGA.poff;if(VGA.phase >= 30)VGA.phase -= 30;
       VGA.line++;if(VGA.line == VGA.ytotal)VGA.line=0;
+      return;
     }
     else
     if(VGA.mode==VGA_NTSC){
@@ -193,23 +194,23 @@ void __attribute__((aligned(256))) TC1_Handler()
       }
       VGA.phase+=VGA.poff;if(VGA.phase >= 88)VGA.phase -= 88;
       VGA.line++;if(VGA.line == VGA.ytotal)VGA.line=0;
+      return;
     }
 
-    else{
-      if(VGA.line==VGA.ysyncstart) _v_digitalWriteDirect(_v_vsync, VGA.vsyncpol); 
-      if(VGA.line==VGA.ysyncend) _v_digitalWriteDirect(_v_vsync,!VGA.vsyncpol); 
-      VGA.linedouble++; 
-      if(VGA.linedouble == VGA.yscale){VGA.linedouble=0;VGA.line++;}
-      if(VGA.line == VGA.ysize)disp=0;
-      if(VGA.line == VGA.ytotal){
-	if(VGA.mode == VGA_MONO)REG_DMAC_SADDR4=(uint32_t)VGA.pb;
-	else if(VGA.mode == VGA_COLOUR)REG_DMAC_SADDR5=(uint32_t)VGA.cb;
-	VGA.line=0;disp=VGA.mode;VGA.framecount++;
-      }
+    if(VGA.line==VGA.ysyncstart) _v_digitalWriteDirect(_v_vsync, VGA.vsyncpol); 
+    if(VGA.line==VGA.ysyncend) _v_digitalWriteDirect(_v_vsync,!VGA.vsyncpol); 
+    VGA.linedouble++; 
+    if(VGA.linedouble == VGA.yscale){VGA.linedouble=0;VGA.line++;}
+    if(VGA.line == VGA.ysize)disp=0;
+    if(VGA.line == VGA.ytotal){
+      if(VGA.mode == VGA_MONO)REG_DMAC_SADDR4=(uint32_t)VGA.pb;
+      else if(VGA.mode == VGA_COLOUR)REG_DMAC_SADDR5=(uint32_t)VGA.cb;
+      VGA.line=0;disp=VGA.mode;VGA.framecount++;
     }
+  
 }
 
-void PWM_Handler()
+void __attribute__((aligned(64))) PWM_Handler()
 {
     long t=(REG_PWM_ISR1);
     if(VGA.linedouble){
@@ -257,8 +258,8 @@ int Vga::calcmodeline()
     
   // calculate timings from modeline data
   xclocks=(xtotal*xscale) &~ 1;
-  xstart=(xtotal - xsyncend)*xscale - 80;
-  if(xstart < 130)xstart = 130;
+  xstart=(xtotal - xsyncend)*xscale - 78;
+  if(xstart < 132)xstart = 132;
   xsyncwidth = (xsyncend - xsyncstart)*xscale;
   
   return 0;
