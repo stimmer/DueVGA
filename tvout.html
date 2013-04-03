@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type">
+    <title>NTSC / PAL TV output - Due VGA library</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  </head>
+  <body>
+    <div id="header">
+      <nav>
+        <li class="fork"><a href="https://github.com/stimmer/DueVGA">View On
+            GitHub</a></li>
+        <li class="downloads"><a href="https://github.com/stimmer/DueVGA/zipball/master">ZIP</a></li>
+        <li class="downloads"><a href="https://github.com/stimmer/DueVGA/tarball/master">TAR</a></li>
+        <li class="title">DOWNLOADS</li>
+      </nav>
+    </div>
+    <!-- end header -->
+    <div class="wrapper">
+      <section>
+        <div id="title">
+          <h1>DueVGA</h1>
+          <p>Arduino Due VGA and TV library</p>
+        </div>
+        <div>
+          <h3>Building the circuit for TV output</h3>
+          <p>The circuit for NTSC and PAL modes is the same. It requires 6
+            resistors and 1 100uF capacitor.</p>
+          <p></p>
+          <table style="width: 100%;" border="0" cellpadding="0" cellspacing="0">
+            <tbody>
+              <tr>
+                <td><br>
+                </td>
+                <td>Correct resistor value</td>
+                <td>Compromise resistor value</td>
+              </tr>
+              <tr>
+                <td colspan="1" rowspan="6">NTSC/PAL</td>
+                <td>3.2k<span class="st">&#937;</span></td>
+                <td>3.3k<span class="st">&#937;</span></td>
+              </tr>
+              <tr>
+                <td>1.6k<span class="st">&#937;</span></td>
+                <td>1.5k<span class="st">&#937;</span></td>
+              </tr>
+              <tr>
+                <td>800<span class="st">&#937;</span></td>
+                <td>820<span class="st">&#937;</span></td>
+              </tr>
+              <tr>
+                <td>400<span class="st">&#937;</span></td>
+                <td>390<span class="st">&#937;</span></td>
+              </tr>
+              <tr>
+                <td>200<span class="st">&#937;</span></td>
+                <td>200<span class="st">&#937;</span></td>
+              </tr>
+              <tr>
+                <td>100<span class="st">&#937;</span></td>
+                <td>100<span class="st">&#937;</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <p>Use the correct resistor values where you can if you have them. The
+            compromise column shows alternative values which are more commonly
+            available. You can use resistors in series or parallel to make up
+            values you do not have.<span class="st"><br>
+            </span></p>
+          <p><span class="st">This is the circuit diagram:<br>
+            </span></p>
+          <img alt="TV out resistor DAC circuit" src="images/rdac.png"><br>
+          <p><br>
+          </p>
+        </div>
+        <div id="title2">
+          <hr> <span class="credits left">Project maintained by <a href="https://github.com/stimmer">stimmer</a></span>
+          <span class="credits right">Hosted on GitHub Pages &#8212; Theme by <a href="http://twitter.com/#%21/michigangraham">mattgraham</a></span>
+          <br>
+        </div>
+      </section>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    <center><br>
+    </center>
+  </body>
+</html>
