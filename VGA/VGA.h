@@ -1,23 +1,19 @@
 // Arduino Due VGA Library by stimmer
-// v0.314 (14/3/2013)
+// v0.404 (4/4/2013)
 //
-// 
-// Changed timer to timer 0 channel 1 (REG_TC0_xx1 / TC1_Handler)
-//	PWM pin 2 now works correctly
-// Colour mode now uses DMA for output
-//      400%+ speed increase ;-)
-// Added keywords.txt
-// 
+//
+// Added NTSC and PAL colour composite modes
+// Fixed some timing problems
+//
 // Known bugs:
 // Sync timing code is all wrong
-// Lines occasionally off by half a pixel
 // Drawing functions could be faster
 // Doesn't work well with Native USB
+// White line / missing first pixel in mono modes
 //
 // TODO:
 // Bitmap / pixmap graphics
 // Larger fonts
-// Composite/CGA modes (15.625/15.75KHz) ?
 // printf
 
 /*

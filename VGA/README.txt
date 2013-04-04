@@ -1,7 +1,7 @@
 Due VGA Library
 by stimmer
 
-V0.222 - 22/2/2013
+V0.404 - 4/4/2013
 
 1) Quick start
 ==============
