@@ -79,6 +79,7 @@ size_t Vga::write(uint8_t c){
     if(ty==twh)scrollPrintWindow();
     return 1;
   }
+  if(c==9){write(32);for(int r=1;r<=8;r++)if(tx&7)write(32);else return r;}
 
   if(mode==VGA_MONO){
     uint8_t *a=(uint8_t *)pb+(twy+ty)*16*pw+((twx+tx)^1);  
@@ -106,5 +107,7 @@ size_t Vga::write(uint8_t c){
 
 size_t Vga::write(const uint8_t *buffer, size_t size)
 {
-  for(int i=0;i<size;i++)write(buffer[i]);  
+  int rv=0;
+  for(int i=0;i<size;i++)rv+=write(buffer[i]);
+  return rv;
 }
