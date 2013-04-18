@@ -36,8 +36,8 @@ void __attribute__((aligned(64))) TC1_Handler()
       REG_DMAC_SADDR5=(int)buf;
       REG_DMAC_CTRLA5=0x22060000 + 223;
       REG_DMAC_CHER=1<<5;   
-      buf=(uint16_t *)(((int)VGA.dmabuf)+((VGA.line&1)*1024));
       int oe=VGA.line&1;
+      buf=(uint16_t *)(((int)VGA.dmabuf)+(oe*1024));
       asm volatile(
 	".rept 18 \n\t"
 	" ldrh r0,[%[cbt]], #2 \n\t"
@@ -293,7 +293,9 @@ void Vga::freevideomem()
 
 void Vga::startinterrupts()
 {
-  for(int i=0;i<45;i++)    NVIC_SetPriority(IRQn_Type (i),3);  
+  for(int i=0;i<45;i++)    NVIC_SetPriority(IRQn_Type (i),6);  
+  NVIC_SetPriority(DMAC_IRQn,4);
+  NVIC_SetPriority(UART_IRQn,5);
   NVIC_SetPriority(PWM_IRQn,3);
   NVIC_SetPriority(TC1_IRQn,1); 
   NVIC_SetPriority(UOTGHS_IRQn,2); 
@@ -463,7 +465,7 @@ int Vga::beginPAL()
   xtotal=448; xsyncstart=335; xsyncend=368;
   ytotal=312; ysyncstart=270; ysyncend=272;
   lfreq=15625; pclock=7000000; ltot=262;
-  xclocks=5376; xstart=130;
+  xclocks=5376; xstart=126;
   xsyncwidth=394;
   line=linedouble=0;
   phase=0;poff=28;
