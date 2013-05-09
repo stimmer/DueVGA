@@ -4,10 +4,10 @@
 
 Vga VGA;
 
-void __attribute__((aligned(64))) TC1_Handler()
+void __attribute__((aligned(64))) TC4_Handler()
 {
   static int disp=0;
-    long dummy=REG_TC0_SR1; 
+    long dummy=REG_TC1_SR1; 
 
     int c=REG_PWM_CCNT2;
     if(!VGA.synced)
@@ -297,18 +297,18 @@ void Vga::startinterrupts()
   NVIC_SetPriority(DMAC_IRQn,4);
   NVIC_SetPriority(UART_IRQn,5);
   NVIC_SetPriority(PWM_IRQn,3);
-  NVIC_SetPriority(TC1_IRQn,1); 
+  NVIC_SetPriority(TC4_IRQn,1); 
   NVIC_SetPriority(UOTGHS_IRQn,2); 
   
   if(mode==VGA_MONO) NVIC_EnableIRQ(DMAC_IRQn);
-  NVIC_EnableIRQ(TC1_IRQn); 
+  NVIC_EnableIRQ(TC4_IRQn); 
   NVIC_EnableIRQ(PWM_IRQn); 
 }
 
 void Vga::stopinterrupts()
 {
   NVIC_DisableIRQ(PWM_IRQn);
-  NVIC_DisableIRQ(TC1_IRQn);
+  NVIC_DisableIRQ(TC4_IRQn);
   NVIC_DisableIRQ(DMAC_IRQn); 
 }
 
@@ -327,20 +327,20 @@ void Vga::starttimers()
   REG_PWM_IER1=1<<2;
   REG_PWM_ENA= 1<<2;  
 
-  REG_PMC_PCER0= 1<<28;
-  REG_TC0_WPMR=0x54494D00;
-  REG_TC0_CMR1=0b00000000000010011100010000000000;
-  REG_TC0_RC1=xclocks/2; 
-  REG_TC0_RA1=0;  
-  REG_TC0_CCR1=0b101;    
-  REG_TC0_IER1=0b00010000; 
-  REG_TC0_IDR1=0b11101111; 
+  REG_PMC_PCER0= 1<<31;
+  REG_TC1_WPMR=0x54494D00;
+  REG_TC1_CMR1=0b00000000000010011100010000000000;
+  REG_TC1_RC1=xclocks/2; 
+  REG_TC1_RA1=0;  
+  REG_TC1_CCR1=0b101;    
+  REG_TC1_IER1=0b00010000; 
+  REG_TC1_IDR1=0b11101111; 
 }
 
 void Vga::stoptimers()
 {
-    REG_TC0_CCR1=0b10;    
-    REG_TC0_IDR1=0b00010000; 
+    REG_TC1_CCR1=0b10;    
+    REG_TC1_IDR1=0b00010000; 
     REG_PMC_PCDR0= 1<<28;
 
     REG_PWM_DIS= 1<<2;
