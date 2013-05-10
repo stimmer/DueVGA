@@ -21,3 +21,7 @@ Anim demo
 To run this you will need an SD card adaptor connected to the SPI header (see the 
 SdFat instructions for how to do this). Copy the file anim.dat to the root directory 
 of the SD card. Then upload the sketch.
+
+The Python script makeanim.py can be used to convert animated GIF files into an anim.dat
+file suitable for the Anim demo. Not all animated GIFs will work properly due to a bug
+in the Python Imaging Library.
