@@ -1,7 +1,7 @@
 Due VGA Library
 by stimmer
 
-V0.404 - 4/4/2013
+V0.987654321 - 23/11/2013
 
 1) Quick start
 ==============
@@ -125,9 +125,9 @@ void VGA.end();
   Stops the display, and frees memory.
 
   
-void VGA.clear();
+void VGA.clear(int col=0);
   
-  Clears the screen to black.
+  Clears the screen to colour col, or black if col is not specified.
 
 
 void VGA.drawPixel(int x, int y, int col);

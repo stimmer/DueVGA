@@ -1,7 +1,15 @@
 #include "VGA.h"
 
-void Vga::clear(){
-  memset(pb,0,2*pbsize);
+void Vga::clear(int c){
+    if(mode==VGA_MONO){
+	for(int y=0;y<ysize;y++){
+	      memset(pb+y*pw,(c&1)?0xff:0,xsize/8);
+	}
+    }
+    else if(mode&VGA_COLOUR){
+      memset(cb,c,cbsize);  
+    }
+  
 }
 
 void Vga::drawPixel(int x, int y, int c)

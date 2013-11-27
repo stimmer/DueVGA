@@ -64,7 +64,7 @@ public:
   int  beginNTSC();  
   void end();
   
-  void clear();
+  void clear(int c=0);
   void drawPixel(int x, int y, int col);
   void drawLine(int x0, int y0, int x1, int y1, int col);
   void drawLinex(int x0, int y0, int x1, int y1, int col);
