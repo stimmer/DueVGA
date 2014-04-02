@@ -75,6 +75,7 @@ public:
   void fillRect(int x0, int y0, int x1, int y1, int col);
   void drawCircle(int x, int y, int r, int col);
   void fillCircle(int x, int y, int r, int col);
+  void drawQuadBezier(int x0, int y0, int x1, int y1, int x2, int y2, int col);
   void drawEllipse(int x0, int y0, int x1, int y1, int col);
   void fillEllipse(int x0, int y0, int x1, int y1, int col);
   void drawText(char *text, int x, int y, int fgcol, int bgcol= -256, int dir=0);  
